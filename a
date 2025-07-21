@@ -275,6 +275,36 @@ local AutoJoinInfinite = Tabs.Main:AddToggle("AutoJoinInfinite", {
                     return false
                 end
 
+                local function checkPlayersInRadius()
+                    if not Options.Carry.Value then return false end
+                    local character = LocalPlayer.Character
+                    if not character or not character:FindFirstChild("HumanoidRootPart") then
+                        return false
+                    end
+
+                    local scanRadius = 10 -- Fixed radius of 10 studs
+                    local rootPos = character.HumanoidRootPart.Position
+                    local targetUsernames = {
+                        Options.Username1.Value,
+                        Options.Username2.Value,
+                        Options.Username3.Value
+                    }
+                    local playersFound = 0
+
+                    for _, player in ipairs(Players:GetPlayers()) do
+                        if player ~= LocalPlayer and table.find(targetUsernames, player.Name) then
+                            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                                local distance = (player.Character.HumanoidRootPart.Position - rootPos).Magnitude
+                                if distance <= scanRadius then
+                                    playersFound = playersFound + 1
+                                end
+                            end
+                        end
+                    end
+
+                    return playersFound >= 3
+                end
+
                 local function spamEAndEndStep()
                     local VirtualInputManager = game:GetService("VirtualInputManager")
                     spawn(function()
@@ -312,7 +342,15 @@ local AutoJoinInfinite = Tabs.Main:AddToggle("AutoJoinInfinite", {
                             LocalPlayer.Character.HumanoidRootPart.CFrame = floorPart.CFrame + Vector3.new(0, 5, 0)
                         end
 
-                        if carryUserId and checkPodsForCarry(carryUserId) then
+                        if Options.Carry.Value and checkPlayersInRadius() then
+                            Fluent:Notify({
+                                Title = "Team Status",
+                                Content = "All 3 users found in radius. Sending E.",
+                                Duration = 5
+                            })
+                            spamEAndEndStep()
+                            break
+                        elseif carryUserId and checkPodsForCarry(carryUserId) then
                             spamEAndEndStep()
                             break
                         end
