@@ -24,6 +24,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Remote = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Shop"):WaitForChild("Buy")
 local ManagementEvent = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Events"):WaitForChild("ManagementEvent")
 local Player_Data = ReplicatedStorage:WaitForChild("Player_Data")
+local LocalPlayer = game.Players.LocalPlayer
 
 --====================================================
 -- VARIABLES
@@ -74,7 +75,7 @@ end
 local function runAutoBuyFoods()
     task.spawn(function()
         while AutoBuyFoods do
-            local OnStocks = Player_Data:WaitForChild("sP1I6HtptK"):WaitForChild("OnStocks")
+            local OnStocks = Player_Data:WaitForChild(LocalPlayer.Name):WaitForChild("OnStocks")
             local FoodFolder = OnStocks:FindFirstChild("Food")
             if FoodFolder then
                 for _, itemFolder in ipairs(FoodFolder:GetChildren()) do
@@ -101,7 +102,7 @@ end
 local function runAutoBuyAnimals()
     task.spawn(function()
         while AutoBuyAnimals do
-            local OnStocks = Player_Data:WaitForChild("sP1I6HtptK"):WaitForChild("OnStocks")
+            local OnStocks = Player_Data:WaitForChild(LocalPlayer.Name):WaitForChild("OnStocks")
             local AnimalFolder = OnStocks:FindFirstChild("Animal")
             if AnimalFolder then
                 for _, animal in ipairs(AnimalFolder:GetChildren()) do
@@ -130,7 +131,7 @@ local function runAutoFeedAnimals()
             local tycoons = workspace:FindFirstChild("Tycoons")
             if tycoons then
                 for _, plot in ipairs(tycoons:GetChildren()) do
-                    if plot:FindFirstChild("Shared") and plot.Shared:FindFirstChild("Owners") and plot.Shared.Owners.Value == game.Players.LocalPlayer.Name then
+                    if plot:FindFirstChild("Shared") and plot.Shared:FindFirstChild("Owners") and plot.Shared.Owners.Value == LocalPlayer.Name then
                         local clients = plot:FindFirstChild("Animals") and plot.Animals:FindFirstChild("Clients")
                         if clients then
                             for _, animal in ipairs(clients:GetChildren()) do
