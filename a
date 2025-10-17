@@ -1,36 +1,252 @@
-{
-  "HOLD_USERS": [
-    "XxJames_FirexX2003",
-    "ZaydenPixel200347",
-    "CharlotteSaber201280",
-    "josephharris2002",
-    "XxMin3rClawTurboxX",
-    "XxEthan_C0dexX2008",
-    "Arr0w_R0cket43",
-    "KnightOrbitCookie202",
-    "C00kieSpark2017",
-    "YadenRoda_50162",
-    "Flam3BlastShadow",
-    "Ethan_R0cket59",
-    "Gh0st_Alpha2013",
-    "VinciTroge_6738",
-    "ADDIS0N_Fr0st2018",
-    "Faithlark2002",
-    "FlareZephyrjumpy",
-    "Harry_DEWYT",
-    "ItsBuilder_Shadow68",
-    "ItsericGauge",
-    "ItsFrostGobbleSpirit",
-    "MrsHannah_Legend",
-    "TheRealMatthewRogue",
-    "CarterCyberPower2002",
-    "Xx_DanielGlitchArr0w",
-    "RiderInfern032",
-    "BaneStarPhoenix70",
-    "MrsAndrewRadiant",
-    "XxDawnGhostBanexX",
-    "HeroFlame98YT",
-    "HzpBDPxBETz",
-    "Vict0riaNe0n2002YT"
-  ]
+--====================================================
+-- GLOBAL
+--====================================================
+local Fluent = loadstring(Game:HttpGet("https://raw.githubusercontent.com/discoart/FluentPlus/refs/heads/main/Beta.lua", true))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(600, 480),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" }),
+    Misc = Window:AddTab({ Title = "MISC", Icon = "more-horizontal" })
 }
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remote = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Shop"):WaitForChild("Buy")
+local ManagementEvent = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Events"):WaitForChild("ManagementEvent")
+local Player_Data = ReplicatedStorage:WaitForChild("Player_Data")
+
+--====================================================
+-- BLOCK FEED NOTIFICATIONS
+--====================================================
+local Notifications = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("UIS"):WaitForChild("Notifications"):WaitForChild("Client")
+
+for _, c in pairs(getconnections(Notifications.OnClientEvent)) do
+    c:Disable()
+end
+
+Notifications.OnClientEvent:Connect(function() end)
+
+--====================================================
+-- VARIABLES
+--====================================================
+local AutoBuyFoods = false
+local AutoBuyAnimals = false
+local AutoFeedAnimals = false
+local AntiAFKEnabled = false
+local SelectedAnimalsSet = {}
+
+local AnimalList = {
+    "Snake","Buffalo","Ostrich","Zebra",
+    "Moose","Yak","Toucan",
+    "Tiger","Penguin","Elephant","Giraffe","Walrus",
+    "Gorilla","Polar Bear","Crocodile",
+    "Lion","Narwhal"
+}
+
+--====================================================
+-- METHODS
+--====================================================
+local function rebuildSelectedAnimalsSet(val)
+    SelectedAnimalsSet = {}
+    if typeof(val) == "string" then
+        SelectedAnimalsSet[val] = true
+        return
+    end
+    if typeof(val) ~= "table" then return end
+    local hasNumeric = false
+    for k,_ in pairs(val) do
+        if typeof(k) == "number" then hasNumeric = true break end
+    end
+    if hasNumeric then
+        for _,name in ipairs(val) do
+            if typeof(name) == "string" then
+                SelectedAnimalsSet[name] = true
+            end
+        end
+    else
+        for name,checked in pairs(val) do
+            if checked and typeof(name) == "string" then
+                SelectedAnimalsSet[name] = true
+            end
+        end
+    end
+end
+
+local function runAutoBuyFoods()
+    task.spawn(function()
+        while AutoBuyFoods do
+            local OnStocks = Player_Data:WaitForChild("sP1I6HtptK"):WaitForChild("OnStocks")
+            local FoodFolder = OnStocks:FindFirstChild("Food")
+            if FoodFolder then
+                for _, itemFolder in ipairs(FoodFolder:GetChildren()) do
+                    if itemFolder and itemFolder.Parent == FoodFolder then
+                        local amount = itemFolder:FindFirstChild("Amount")
+                        if amount and amount.Value > 0 then
+                            local args = {
+                                "Food",
+                                {
+                                    BuyAll = true,
+                                    ItemName = itemFolder.Name
+                                }
+                            }
+                            Remote:FireServer(unpack(args))
+                        end
+                    end
+                end
+            end
+            task.wait(1)
+        end
+    end)
+end
+
+local function runAutoBuyAnimals()
+    task.spawn(function()
+        while AutoBuyAnimals do
+            local OnStocks = Player_Data:WaitForChild("sP1I6HtptK"):WaitForChild("OnStocks")
+            local AnimalFolder = OnStocks:FindFirstChild("Animal")
+            if AnimalFolder then
+                for _, animal in ipairs(AnimalFolder:GetChildren()) do
+                    if animal and animal.Parent == AnimalFolder and SelectedAnimalsSet[animal.Name] then
+                        local amount = animal:FindFirstChild("Amount")
+                        if amount and amount.Value > 0 then
+                            local args = {
+                                "Animal",
+                                {
+                                    ItemName = animal.Name
+                                }
+                            }
+                            Remote:FireServer(unpack(args))
+                        end
+                    end
+                end
+            end
+            task.wait(1)
+        end
+    end)
+end
+
+local function runAutoFeedAnimals()
+    task.spawn(function()
+        while AutoFeedAnimals do
+            local tycoons = workspace:FindFirstChild("Tycoons")
+            if tycoons then
+                for _, plot in ipairs(tycoons:GetChildren()) do
+                    if plot:FindFirstChild("Shared") and plot.Shared:FindFirstChild("Owners") and plot.Shared.Owners.Value == game.Players.LocalPlayer.Name then
+                        local clients = plot:FindFirstChild("Animals") and plot.Animals:FindFirstChild("Clients")
+                        if clients then
+                            for _, animal in ipairs(clients:GetChildren()) do
+                                local args = {
+                                    "FullFeed",
+                                    animal.Name
+                                }
+                                ManagementEvent:FireServer(unpack(args))
+                            end
+                        end
+                    end
+                end
+            end
+            task.wait(30)
+        end
+    end)
+end
+
+local function runAntiAFK()
+    task.spawn(function()
+        local vu = game:GetService("VirtualUser")
+        while AntiAFKEnabled do
+            vu:CaptureController()
+            vu:ClickButton2(Vector2.new())
+            task.wait(60)
+        end
+    end)
+end
+
+--====================================================
+-- UI SECTIONS
+--====================================================
+local FoodsSection = Tabs.Main:AddSection("Foods")
+local AnimalsSection = Tabs.Main:AddSection("Animals")
+local FeedingSection = Tabs.Main:AddSection("Feeding")
+local MiscSection = Tabs.Misc:AddSection("Miscellaneous")
+
+--====================================================
+-- BUTTONS / TOGGLES / DROPDOWNS
+--====================================================
+FoodsSection:AddToggle("AutoBuyFoods", {
+    Title = "Auto Buy All Foods",
+    Default = false,
+    Callback = function(Value)
+        AutoBuyFoods = Value
+        if AutoBuyFoods then runAutoBuyFoods() end
+    end
+})
+
+AnimalsSection:AddDropdown("SelectAnimals", {
+    Title = "Select Animals",
+    Values = AnimalList,
+    Multi = true,
+    Default = {},
+    Callback = function(Value)
+        rebuildSelectedAnimalsSet(Value)
+    end
+})
+
+AnimalsSection:AddToggle("AutoBuyAnimals", {
+    Title = "Auto Buy Animals",
+    Default = false,
+    Callback = function(Value)
+        AutoBuyAnimals = Value
+        if AutoBuyAnimals then runAutoBuyAnimals() end
+    end
+})
+
+FeedingSection:AddToggle("AutoFeedAnimals", {
+    Title = "Auto Feed Animals",
+    Default = false,
+    Callback = function(Value)
+        AutoFeedAnimals = Value
+        if AutoFeedAnimals then runAutoFeedAnimals() end
+    end
+})
+
+MiscSection:AddToggle("AntiAFK", {
+    Title = "Anti AFK",
+    Default = true,
+    Callback = function(Value)
+        AntiAFKEnabled = Value
+        if AntiAFKEnabled then runAntiAFK() end
+    end
+})
+
+--====================================================
+-- SAVE & UI
+--====================================================
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+Window:SelectTab(1)
+
+Fluent:Notify({
+    Title = "Fluent",
+    Content = "The script has been loaded.",
+    Duration = 8
+})
+
+SaveManager:LoadAutoloadConfig()
