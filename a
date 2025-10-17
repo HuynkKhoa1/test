@@ -221,23 +221,21 @@ Tabs.Settings:AddToggle("DisableNotification", {
     Title = "Disable Notification",
     Default = false,
     Callback = function(Value)
-        NotificationDisabled = Value
         local Notifications = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("UIS"):WaitForChild("Notifications"):WaitForChild("Client")
-        if NotificationDisabled then
-            -- block
-            if NotificationConnection then
-                NotificationConnection:Disconnect()
+        if Value then
+            -- disable tất cả connection gốc
+            for _, conn in pairs(getconnections(Notifications.OnClientEvent)) do
+                conn:Disable()
             end
-            NotificationConnection = Notifications.OnClientEvent:Connect(function() end)
         else
-            -- un-block
-            if NotificationConnection then
-                NotificationConnection:Disconnect()
-                NotificationConnection = nil
+            -- enable lại tất cả connection
+            for _, conn in pairs(getconnections(Notifications.OnClientEvent)) do
+                conn:Enable()
             end
         end
     end
 })
+
 
 --====================================================
 -- SAVE & UI
