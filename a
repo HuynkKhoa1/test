@@ -236,6 +236,13 @@ Tabs.Settings:AddToggle("DisableNotification", {
     end
 })
 
+AnimalsSection:AddButton({
+    Title = "Show Animals Stock UI",
+    Description = "Live Animals Stock",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/HuynkKhoa1/SWB/refs/heads/main/Loader.lua", true))()
+    end
+})
 
 --====================================================
 -- SAVE & UI
