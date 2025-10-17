@@ -196,7 +196,7 @@ FeedingSection:AddToggle("AutoFeedAnimals", {
     end
 })
 
-Tabs.Main:AddToggle("AntiAFK", {
+Tabs.Settings:AddToggle("AntiAFK", {
     Title = "Anti AFK",
     Default = true,
     Callback = function(Value)
