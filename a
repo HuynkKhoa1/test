@@ -34,6 +34,8 @@ local AutoBuyFoods = false
 local AutoBuyAnimals = false
 local AutoFeedAnimals = false
 local SelectedAnimalsSet = {}
+local NotificationDisabled = false
+local NotificationConnection
 
 local AnimalList = {
     "Snake","Buffalo","Ostrich","Zebra",
@@ -211,6 +213,28 @@ Tabs.Settings:AddToggle("AntiAFK", {
                     task.wait(60)
                 end
             end)
+        end
+    end
+})
+
+Tabs.Settings:AddToggle("DisableNotification", {
+    Title = "Disable Notification",
+    Default = false,
+    Callback = function(Value)
+        NotificationDisabled = Value
+        local Notifications = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("UIS"):WaitForChild("Notifications"):WaitForChild("Client")
+        if NotificationDisabled then
+            -- block
+            if NotificationConnection then
+                NotificationConnection:Disconnect()
+            end
+            NotificationConnection = Notifications.OnClientEvent:Connect(function() end)
+        else
+            -- un-block
+            if NotificationConnection then
+                NotificationConnection:Disconnect()
+                NotificationConnection = nil
+            end
         end
     end
 })
