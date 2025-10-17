@@ -28,6 +28,7 @@ local Player_Data = ReplicatedStorage:WaitForChild("Player_Data")
 --====================================================
 -- VARIABLES
 --====================================================
+local AntiAFKEnabled = false
 local AutoBuyFoods = false
 local AutoBuyAnimals = false
 local AutoFeedAnimals = false
@@ -195,6 +196,24 @@ FeedingSection:AddToggle("AutoFeedAnimals", {
     end
 })
 
+Tabs.Main:AddToggle("AntiAFK", {
+    Title = "Anti AFK",
+    Default = true,
+    Callback = function(Value)
+        AntiAFKEnabled = Value
+        if AntiAFKEnabled then
+            task.spawn(function()
+                local vu = game:GetService("VirtualUser")
+                while AntiAFKEnabled do
+                    vu:CaptureController()
+                    vu:ClickButton2(Vector2.new())
+                    task.wait(60)
+                end
+            end)
+        end
+    end
+})
+
 --====================================================
 -- SAVE & UI
 --====================================================
@@ -210,8 +229,8 @@ SaveManager:BuildConfigSection(Tabs.Settings)
 Window:SelectTab(1)
 
 Fluent:Notify({
-    Title = "Fluent",
-    Content = "The script has been loaded.",
+    Title = "Raise Animals Hub v1.0",
+    Content = "The hub has been loaded.",
     Duration = 8
 })
 
