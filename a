@@ -6,8 +6,8 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "Fluent " .. Fluent.Version,
-    SubTitle = "by dawid",
+    Title = "Raise Animals Hub v1.0",
+    SubTitle = "By Koa",
     TabWidth = 160,
     Size = UDim2.fromOffset(600, 480),
     Acrylic = true,
@@ -17,8 +17,7 @@ local Window = Fluent:CreateWindow({
 
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" }),
-    Misc = Window:AddTab({ Title = "MISC", Icon = "more-horizontal" })
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -27,23 +26,11 @@ local ManagementEvent = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("E
 local Player_Data = ReplicatedStorage:WaitForChild("Player_Data")
 
 --====================================================
--- BLOCK FEED NOTIFICATIONS
---====================================================
-local Notifications = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("UIS"):WaitForChild("Notifications"):WaitForChild("Client")
-
-for _, c in pairs(getconnections(Notifications.OnClientEvent)) do
-    c:Disable()
-end
-
-Notifications.OnClientEvent:Connect(function() end)
-
---====================================================
 -- VARIABLES
 --====================================================
 local AutoBuyFoods = false
 local AutoBuyAnimals = false
 local AutoFeedAnimals = false
-local AntiAFKEnabled = false
 local SelectedAnimalsSet = {}
 
 local AnimalList = {
@@ -161,24 +148,12 @@ local function runAutoFeedAnimals()
     end)
 end
 
-local function runAntiAFK()
-    task.spawn(function()
-        local vu = game:GetService("VirtualUser")
-        while AntiAFKEnabled do
-            vu:CaptureController()
-            vu:ClickButton2(Vector2.new())
-            task.wait(60)
-        end
-    end)
-end
-
 --====================================================
 -- UI SECTIONS
 --====================================================
 local FoodsSection = Tabs.Main:AddSection("Foods")
 local AnimalsSection = Tabs.Main:AddSection("Animals")
 local FeedingSection = Tabs.Main:AddSection("Feeding")
-local MiscSection = Tabs.Misc:AddSection("Miscellaneous")
 
 --====================================================
 -- BUTTONS / TOGGLES / DROPDOWNS
@@ -217,15 +192,6 @@ FeedingSection:AddToggle("AutoFeedAnimals", {
     Callback = function(Value)
         AutoFeedAnimals = Value
         if AutoFeedAnimals then runAutoFeedAnimals() end
-    end
-})
-
-MiscSection:AddToggle("AntiAFK", {
-    Title = "Anti AFK",
-    Default = true,
-    Callback = function(Value)
-        AntiAFKEnabled = Value
-        if AntiAFKEnabled then runAntiAFK() end
     end
 })
 
